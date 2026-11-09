@@ -1,0 +1,69 @@
+name: Deploy static website
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'www/**'
+      - '*.tf'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: ${{ secrets.AWS_REGION || 'us-east-1' }}
+      CUSTOM_DOMAIN_NAME: ${{ secrets.CUSTOM_DOMAIN_NAME }}
+      ROUTE53_ZONE_NAME: ${{ secrets.ROUTE53_ZONE_NAME }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.8.5
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Build Terraform variables
+        shell: bash
+        run: |
+          TF_ARGS=""
+          if [ -n "$CUSTOM_DOMAIN_NAME" ]; then
+            TF_ARGS="$TF_ARGS -var=\"custom_domain_name=$CUSTOM_DOMAIN_NAME\""
+          fi
+          if [ -n "$ROUTE53_ZONE_NAME" ]; then
+            TF_ARGS="$TF_ARGS -var=\"route53_zone_name=$ROUTE53_ZONE_NAME\""
+          fi
+          echo "TF_ARGS=$TF_ARGS" >> "$GITHUB_ENV"
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve $TF_ARGS
+
+      - name: Upload website files to S3
+        run: |
+          BUCKET_NAME="$(terraform output -raw s3_bucket_name)"
+          aws s3 sync ./www "s3://${BUCKET_NAME}" --delete
+
+      - name: Invalidate CloudFront cache
+        run: |
+          DISTRIBUTION_ID="$(terraform output -raw cloudfront_distribution_id)"
+          aws cloudfront create-invalidation --distribution-id "$DISTRIBUTION_ID" --paths "/*"

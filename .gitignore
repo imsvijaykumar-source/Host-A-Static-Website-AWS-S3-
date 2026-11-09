@@ -1,0 +1,44 @@
+# Terraform state and generated files
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+crash.log
+*.tfvars
+*.tfvars.json
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Local environment files
+.env
+.env.*
+*.pem
+*.key
+*.crt
+*.csr
+
+# AWS CLI credentials and local config
+.aws/
+.aws-sam/
+
+# OS/editor junk
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
+
+# Secret or sensitive project files
+secrets/
+private/
+credentials/
+
+# Optional: if you store local notes or generated artifacts locally
+terraform.tfstate
+terraform.tfstate.backup
