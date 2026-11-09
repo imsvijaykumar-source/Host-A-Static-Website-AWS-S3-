@@ -1,4 +1,4 @@
-# Day 14: Static Website Hosting (Mini Project 1)
+# Static Website Hosting (Mini Project 1)
 
 ![Terraform](https://img.shields.io/badge/Terraform-7B42BC?style=for-the-badge&logo=terraform)
 ![AWS](https://img.shields.io/badge/AWS-CloudFront%20%26%20S3-FF9900?style=for-the-badge&logo=amazonaws)
@@ -29,7 +29,7 @@ flowchart LR
 ## 📁 Project Structure
 
 ```text
-day14/
+project/
 ├── main.tf
 ├── variables.tf
 ├── outputs.tf
